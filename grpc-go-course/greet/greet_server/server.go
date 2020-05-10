@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"ggeorgakas/grpc-go-course/greet/greetpb"
+	"github.com/go_udemy/grpc-go-course/greet/greetpb"
 	"log"
 	"net"
 
 	"google.golang.org/grpc"
 )
 
-type server struct {}
+type server struct{}
 
 func main() {
 	fmt.Printf("Greet server")
