@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/go_udemy/grpc-go-course/greet/greetpb"
+	"google.golang.org/grpc"
 	"log"
 	"net"
-
-	"google.golang.org/grpc"
 )
 
 type server struct{}
