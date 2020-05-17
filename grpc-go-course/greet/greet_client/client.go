@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/go_udemy/grpc-go-course/calculator/calculatorpb"
 	"github.com/go_udemy/grpc-go-course/greet/greetpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 )
 
@@ -19,11 +19,9 @@ func main() {
 
 	c := greetpb.NewGreetServiceClient(cc)
 	//fmt.Printf("Created client: %f", c)
-	doUnary(c)
+	//doUnary(c)
 
-	l := calculatorpb.NewCalculatorServiceClient(cc)
-	doUnaryC(l)
-
+	doServerStreaming(c)
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
@@ -42,19 +40,28 @@ func doUnary(c greetpb.GreetServiceClient) {
 	log.Printf("Response from Greet: %v", res.Result)
 }
 
-func doUnaryC(c calculatorpb.CalculatorServiceClient) {
-	fmt.Println("Starting to do a Calculator Unary RPC")
-	req := &calculatorpb.CalculatorRequest{
-		Calculator: &calculatorpb.Calculator{
-			NumberOne: 10,
-			NumberTwo: 3,
-		},
-	}
+func doServerStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Server Streaming RPC")
 
-	res, err := c.Calculator(context.Background(), req)
+	req := &greetpb.GreetManyTimesRequest{Greeting: &greetpb.Greeting{
+		FirstName: "George",
+		LastName:  "Georgakas",
+	}}
+	resStream, err := c.GreetManyTimes(context.Background(), req)
 	if err != nil {
-		log.Fatalf("Error while calling Calculator RPC: %v", err)
+		log.Fatalf("Error while calling Server Streaming RPC: %v", err)
+	}
+	for {
+		msg, err := resStream.Recv()
+		if err == io.EOF {
+			// We have reached the end of stream
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error while reading stream: %v", err)
+		}
+
+		log.Printf("Response from GreetingManyTimes: %v", msg.GetResult())
 	}
 
-	log.Printf("Response from Calculator: %v", res.Result)
 }
