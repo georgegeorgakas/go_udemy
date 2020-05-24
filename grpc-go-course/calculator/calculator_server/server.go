@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go_udemy/grpc-go-course/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 )
@@ -36,6 +37,49 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositi
 		}
 	}
 	return nil
+}
+
+func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	result := float32(0)
+	counter := float32(0)
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Printf("Total is %f and counter is %f", result, counter)
+			result = result / counter
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{Average: result})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading Client Stream %v", err)
+		}
+		result += req.GetNumber()
+		counter++
+	}
+}
+
+func (*server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	fmt.Println("Received FindMaximum RPC")
+	max := int32(0)
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream %v", err)
+			return err
+		}
+		number := req.GetNumber()
+		if number > max {
+			max = number
+			sendErr := stream.Send(&calculatorpb.FindMaximumResponse{Maximum: max})
+			if sendErr != nil {
+				log.Fatalf("Error while sending data to client %v", err)
+				return err
+			}
+		}
+	}
 }
 
 func main() {
